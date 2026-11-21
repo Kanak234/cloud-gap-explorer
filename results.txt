@@ -1,1 +1,1 @@
-{'disagreeing_pixels': 0, 'aoi_pixels': 8836, 'clear_pixels': 678, 'seconds': 0.10543060000054538}
+{'disagreeing_pixels': 0, 'aoi_pixels': 8836, 'clear_pixels': 678, 'seconds': 0.026410287999965476}

@@ -43,3 +43,17 @@ def test_loader_grid_mismatch():
 
     with pytest.raises(ValueError, match="common grid"):
         list(compare([("a", "grid1"), ("b", "grid2")], geo, Loader()))
+
+
+def test_aoi_outside_footprint(tmp_path):
+    # The raster covers lon/lat 0..2; this AOI reaches lon 5, so pixels outside
+    # the image would silently vanish from the denominator. The loader must refuse.
+    path = tmp_path / "A.tif"
+    with rasterio.open(
+        path, "w", driver="GTiff", height=2, width=2, count=1, dtype="uint8",
+        crs="EPSG:4326", transform=from_origin(0, 2, 1, 1), nodata=0,
+    ) as ds:
+        ds.write(np.full((2, 2), 4, dtype="uint8"), 1)
+    wide = {"type": "Polygon", "coordinates": [[[0, 0], [5, 0], [5, 2], [0, 2], [0, 0]]]}
+    with pytest.raises(ValueError, match="outside the source footprint"):
+        list(compare([("a", path), ("b", path)], wide))

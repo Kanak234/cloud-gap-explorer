@@ -5,6 +5,10 @@ Built by Kanak Prabhakar
 
 Measure how many AOI pixels are usable on both acquisition dates and inspect their spatial distribution offline.
 
+![Demo: two Sentinel-2 scene-classification masks compared inside an AOI](assets/demo.gif)
+
+The demo shows real output. Of the 8,836 AOI pixels, 678 (7.7%) are clear on both 18 and 28 January 2024. QGIS Raster Calculator gives exactly the same answer: 0 pixel disagreements.
+
 ## Features and architecture
 Accept a WGS84 polygon and aligned GeoTIFFs. The loader supplies grid metadata, center-in-polygon membership and clear flags. A replacement loader can decode Resourcesat quality flags after validation against its product specification.
 
@@ -19,7 +23,7 @@ From the extracted project directory, run `python -m pip install -r requirements
 ```sh
 python cloudgap.py sample/aoi.geojson comparison 2024-01-18=sample/2024-01-18.tif 2024-01-28=sample/2024-01-28.tif
 python -m pytest -q 
-python bench.py aoi.geojson a.tif b.tif qgis-reference.tif
+python bench.py sample/aoi.geojson sample/2024-01-18.tif sample/2024-01-28.tif sample/qgis-reference.tif
 ```
 
 ## Benchmark protocol
@@ -32,19 +36,13 @@ In QGIS Raster Calculator build a 0/1 reference using ((A@1=4) OR (A@1=5) OR (A@
 ## Limitations and roadmap
 Coverage uses pixel counts. AOIs extending beyond the input footprint need clipping or explicit footprint testing. Large crops use RAM. Next add a validated Resourcesat loader.
 
-## Resume
-Accomplished offline clear-area comparison as measured by TBD pixel disagreements by doing boolean SCL intersections on a common grid. Use disagreeing_pixels from bench.py.
+## Resume line
+Accomplished an offline two-date clear-sky coverage tool that matches QGIS Raster Calculator pixel for pixel (0 disagreements over 8,836 AOI pixels, 678 jointly clear) in about 0.03 s of comparison time, as measured by `bench.py` against an exported QGIS reference raster, by doing boolean Sentinel-2 SCL intersections on a shared grid with nodata kept in the denominator.
 
-To replay the included example run `python bench.py sample/aoi.geojson sample/2024-01-18.tif sample/2024-01-28.tif sample/qgis-reference.tif`. To rebuild the reference use QGIS Python with `python qgis_reference.py sample/2024-01-18.tif sample/2024-01-28.tif reference.tif`. Open sample-report/map.html for all three date pairs. Source imagery and modifications are credited in sample/SOURCES.md.
+This is one AOI and one date pair, so the claim is "agrees with QGIS", not "faster than QGIS". The QGIS run time was not timed. To rebuild the reference use QGIS Python with `python qgis_reference.py sample/2024-01-18.tif sample/2024-01-28.tif reference.tif`. Open sample-report/map.html for all three date pairs. Source imagery and modifications are credited in sample/SOURCES.md.
 
 ## Credits
 [Rasterio](https://rasterio.readthedocs.io/), [QGIS](https://qgis.org/), [NumPy](https://numpy.org/), [Pillow](https://python-pillow.org/), [pytest](https://pytest.org/).
-
-## Publish
-Run in PowerShell 7 or Bash from the repository root.
-```sh
-git init -b main && git add . && git -c user.name="Kanak Prabhakar" -c user.email="kanakprabhakar72@gmail.com" commit -m "Add Cloud-Gap Explorer" && gh repo create Kanak234/cloud-gap-explorer --public --source=. --remote=origin --push
-```
 
 ## Presentation
 
@@ -57,4 +55,4 @@ git init -b main && git add . && git -c user.name="Kanak Prabhakar" -c user.emai
 **Main limitation.** The current loader expects aligned SCL grids and a polygon within both footprints.
 
 
-See edge-cases.md for tested inputs and tests-output.txt for actual Windows pytest output.
+See PRD.md, TRD.md and edge-cases.md for the design, and tests-output.txt / results.txt for the latest runs.
